@@ -390,10 +390,10 @@ class Viewport {
    *                           If `false` or `undefined`, will perform a full redraw
    * @returns fastDraw {Boolean} The fastDraw value, possibly modified
    */
-  createRenderCalculators(fastDraw = false) {
+  createRenderCalculators(fastDraw = false, verticalScrolling, horizontalScrolling) {
     if (fastDraw) {
-      let proposedRowsVisibleCalculator = this.createRowsCalculator(true);
-      let proposedColumnsVisibleCalculator = this.createColumnsCalculator(true);
+      let proposedRowsVisibleCalculator = this.createRowsCalculator(true, verticalScrolling, horizontalScrolling);
+      let proposedColumnsVisibleCalculator = this.createColumnsCalculator(true, verticalScrolling, horizontalScrolling);
 
       if (!(this.areAllProposedVisibleRowsAlreadyRendered(proposedRowsVisibleCalculator) &&
           this.areAllProposedVisibleColumnsAlreadyRendered(proposedColumnsVisibleCalculator))) {
@@ -402,8 +402,8 @@ class Viewport {
     }
 
     if (!fastDraw) {
-      this.rowsRenderCalculator = this.createRowsCalculator();
-      this.columnsRenderCalculator = this.createColumnsCalculator();
+      this.rowsRenderCalculator = this.createRowsCalculator(null, verticalScrolling, horizontalScrolling);
+      this.columnsRenderCalculator = this.createColumnsCalculator(null, verticalScrolling, horizontalScrolling);
     }
     // delete temporarily to make sure that renderers always use rowsRenderCalculator, not rowsVisibleCalculator
     this.rowsVisibleCalculator = null;

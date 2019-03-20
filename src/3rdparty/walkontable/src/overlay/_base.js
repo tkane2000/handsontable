@@ -236,12 +236,12 @@ class Overlay {
    *
    * @param {Boolean} [fastDraw=false]
    */
-  refresh(fastDraw = false) {
+  refresh(fastDraw = false, verticalScrolling, horizontalScrolling) {
     // When hot settings are changed we allow to refresh overlay once before blocking
     var nextCycleRenderFlag = this.shouldBeRendered();
 
     if (this.clone && (this.needFullRender || nextCycleRenderFlag)) {
-      this.clone.draw(fastDraw);
+      this.clone.draw(fastDraw, verticalScrolling, horizontalScrolling);
     }
     this.needFullRender = nextCycleRenderFlag;
   }

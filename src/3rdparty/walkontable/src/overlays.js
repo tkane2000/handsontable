@@ -165,7 +165,7 @@ class Overlays {
 
       return;
     }
-    this.wot.draw(true);
+    this.wot.draw(true, this.verticalScrolling, this.horizontalScrolling);
 
     if (this.verticalScrolling) {
       this.leftOverlay.onScroll();
@@ -477,7 +477,7 @@ class Overlays {
   /**
    * @param {Boolean} [fastDraw=false]
    */
-  refresh(fastDraw = false) {
+  refresh(fastDraw = false, verticalScrolling, horizontalScrolling) {
     if (this.topOverlay.areElementSizesAdjusted && this.leftOverlay.areElementSizesAdjusted) {
       let container = this.wot.wtTable.wtRootElement.parentNode || this.wot.wtTable.wtRootElement;
       let width = container.clientWidth;
@@ -491,22 +491,22 @@ class Overlays {
     }
 
     if (this.bottomOverlay.clone) {
-      this.bottomOverlay.refresh(fastDraw);
+      this.bottomOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
     }
 
-    this.leftOverlay.refresh(fastDraw);
-    this.topOverlay.refresh(fastDraw);
+    this.leftOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
+    this.topOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
 
     if (this.topLeftCornerOverlay) {
-      this.topLeftCornerOverlay.refresh(fastDraw);
+      this.topLeftCornerOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
     }
 
     if (this.bottomLeftCornerOverlay && this.bottomLeftCornerOverlay.clone) {
-      this.bottomLeftCornerOverlay.refresh(fastDraw);
+      this.bottomLeftCornerOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
     }
 
     if (this.debug) {
-      this.debug.refresh(fastDraw);
+      this.debug.refresh(fastDraw, verticalScrolling, horizontalScrolling);
     }
   }
 

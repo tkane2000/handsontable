@@ -192,7 +192,7 @@ class Table {
    * @param {Boolean} fastDraw If TRUE, will try to avoid full redraw and only update the border positions. If FALSE or UNDEFINED, will perform a full redraw
    * @returns {Table}
    */
-  draw(fastDraw) {
+  draw(fastDraw, verticalScrolling, horizontalScrolling) {
     const {wtOverlays, wtViewport} = this.wot;
     let totalRows = this.instance.getSetting('totalRows');
     let rowHeaders = this.wot.getSetting('rowHeaders').length;
@@ -201,7 +201,7 @@ class Table {
 
     if (!this.isWorkingOnClone()) {
       this.holderOffset = offset(this.holder);
-      fastDraw = wtViewport.createRenderCalculators(fastDraw);
+      fastDraw = wtViewport.createRenderCalculators(fastDraw, verticalScrolling, horizontalScrolling);
 
       if (rowHeaders && !this.wot.getSetting('fixedColumnsLeft')) {
         const leftScrollPos = wtOverlays.leftOverlay.getScrollPosition();
@@ -225,7 +225,7 @@ class Table {
         wtViewport.createVisibleCalculators();
       }
       if (wtOverlays) {
-        wtOverlays.refresh(true);
+        wtOverlays.refresh(true, verticalScrolling, horizontalScrolling);
       }
     } else {
       if (this.isWorkingOnClone()) {
@@ -259,7 +259,7 @@ class Table {
       this.columnFilter = new ColumnFilter(startColumn, this.wot.getSetting('totalColumns'), rowHeaders);
 
       this.alignOverlaysWithTrimmingContainer();
-      this._doDraw(); // creates calculator after draw
+      this._doDraw(verticalScrolling, horizontalScrolling); // creates calculator after draw
     }
     this.refreshSelections(fastDraw);
 
@@ -288,10 +288,10 @@ class Table {
     return this;
   }
 
-  _doDraw() {
+  _doDraw(verticalScrolling, horizontalScrolling) {
     const wtRenderer = new TableRenderer(this);
 
-    wtRenderer.render();
+    wtRenderer.render(verticalScrolling, horizontalScrolling);
   }
 
   removeClassFromCells(className) {

@@ -45,7 +45,7 @@ class TableRenderer {
   /**
    *
    */
-  render() {
+  render(verticalScrolling, horizontalScrolling) {
     if (!this.wtTable.isWorkingOnClone()) {
       const skipRender = {};
       this.wot.getSetting('beforeDraw', true, skipRender);
@@ -69,6 +69,10 @@ class TableRenderer {
     let workspaceWidth;
     let adjusted = false;
 
+    // we can't count on horizontalScrolling to be set,
+    // so in those cases just set to true
+    var shouldAdjustWidth = (typeof horizontalScrolling === 'undefined' || horizontalScrolling);
+
     if (Overlay.isOverlayTypeOf(this.wot.cloneOverlay, Overlay.CLONE_BOTTOM) ||
       Overlay.isOverlayTypeOf(this.wot.cloneOverlay, Overlay.CLONE_BOTTOM_LEFT_CORNER)) {
 
@@ -88,12 +92,14 @@ class TableRenderer {
       // Render table rows
       this.renderRows(totalRows, rowsToRender, columnsToRender);
 
-      if (!this.wtTable.isWorkingOnClone()) {
+      if (shouldAdjustWidth && !this.wtTable.isWorkingOnClone()) {
         workspaceWidth = this.wot.wtViewport.getWorkspaceWidth();
         this.wot.wtViewport.containerWidth = null;
       }
 
-      this.adjustColumnWidths(columnsToRender);
+      if (shouldAdjustWidth) {
+        this.adjustColumnWidths(columnsToRender);
+      }
       this.markOversizedColumnHeaders();
       this.adjustColumnHeaderHeights();
     }
@@ -108,19 +114,19 @@ class TableRenderer {
     }
     if (!this.wtTable.isWorkingOnClone()) {
       this.wot.wtViewport.createVisibleCalculators();
-      this.wot.wtOverlays.refresh(false);
+      this.wot.wtOverlays.refresh(false, verticalScrolling, horizontalScrolling);
 
       this.wot.wtOverlays.applyToDOM();
 
-      let hiderWidth = outerWidth(this.wtTable.hider);
-      let tableWidth = outerWidth(this.wtTable.TABLE);
+      let hiderWidth = shouldAdjustWidth && outerWidth(this.wtTable.hider);
+      let tableWidth = shouldAdjustWidth && outerWidth(this.wtTable.TABLE);
 
       if (hiderWidth !== 0 && (tableWidth !== hiderWidth)) {
         // Recalculate the column widths, if width changes made in the overlays removed the scrollbar, thus changing the viewport width.
         this.adjustColumnWidths(columnsToRender);
       }
 
-      if (workspaceWidth !== this.wot.wtViewport.getWorkspaceWidth()) {
+      if (shouldAdjustWidth && workspaceWidth !== this.wot.wtViewport.getWorkspaceWidth()) {
         // workspace width changed though to shown/hidden vertical scrollbar. Let's reapply stretching
         this.wot.wtViewport.containerWidth = null;
 

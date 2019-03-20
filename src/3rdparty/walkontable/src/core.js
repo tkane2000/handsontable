@@ -72,14 +72,14 @@ class Walkontable {
    *                                   rendering anyway
    * @returns {Walkontable}
    */
-  draw(fastDraw = false) {
+  draw(fastDraw = false, verticalScrolling, horizontalScrolling) {
     this.drawInterrupted = false;
 
     if (!fastDraw && !isVisible(this.wtTable.TABLE)) {
       // draw interrupted because TABLE is not visible
       this.drawInterrupted = true;
     } else {
-      this.wtTable.draw(fastDraw);
+      this.wtTable.draw(fastDraw, verticalScrolling, horizontalScrolling);
     }
 
     return this;
