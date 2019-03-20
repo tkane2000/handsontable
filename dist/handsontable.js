@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  * Version: 3.0.0
- * Release date: 16/05/2018 (built at 09/05/2018 15:18:34)
+ * Release date: 16/05/2018 (built at 20/03/2019 14:57:41)
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -6600,12 +6600,14 @@ var Overlay = function () {
     key: 'refresh',
     value: function refresh() {
       var fastDraw = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var verticalScrolling = arguments[1];
+      var horizontalScrolling = arguments[2];
 
       // When hot settings are changed we allow to refresh overlay once before blocking
       var nextCycleRenderFlag = this.shouldBeRendered();
 
       if (this.clone && (this.needFullRender || nextCycleRenderFlag)) {
-        this.clone.draw(fastDraw);
+        this.clone.draw(fastDraw, verticalScrolling, horizontalScrolling);
       }
       this.needFullRender = nextCycleRenderFlag;
     }
@@ -18801,6 +18803,8 @@ var Walkontable = function () {
     key: 'draw',
     value: function draw() {
       var fastDraw = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var verticalScrolling = arguments[1];
+      var horizontalScrolling = arguments[2];
 
       this.drawInterrupted = false;
 
@@ -18808,7 +18812,7 @@ var Walkontable = function () {
         // draw interrupted because TABLE is not visible
         this.drawInterrupted = true;
       } else {
-        this.wtTable.draw(fastDraw);
+        this.wtTable.draw(fastDraw, verticalScrolling, horizontalScrolling);
       }
 
       return this;
@@ -19485,7 +19489,7 @@ var Overlays = function () {
 
         return;
       }
-      this.wot.draw(true);
+      this.wot.draw(true, this.verticalScrolling, this.horizontalScrolling);
 
       if (this.verticalScrolling) {
         this.leftOverlay.onScroll();
@@ -19857,6 +19861,8 @@ var Overlays = function () {
     key: 'refresh',
     value: function refresh() {
       var fastDraw = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var verticalScrolling = arguments[1];
+      var horizontalScrolling = arguments[2];
 
       if (this.topOverlay.areElementSizesAdjusted && this.leftOverlay.areElementSizesAdjusted) {
         var container = this.wot.wtTable.wtRootElement.parentNode || this.wot.wtTable.wtRootElement;
@@ -19871,22 +19877,22 @@ var Overlays = function () {
       }
 
       if (this.bottomOverlay.clone) {
-        this.bottomOverlay.refresh(fastDraw);
+        this.bottomOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
       }
 
-      this.leftOverlay.refresh(fastDraw);
-      this.topOverlay.refresh(fastDraw);
+      this.leftOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
+      this.topOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
 
       if (this.topLeftCornerOverlay) {
-        this.topLeftCornerOverlay.refresh(fastDraw);
+        this.topLeftCornerOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
       }
 
       if (this.bottomLeftCornerOverlay && this.bottomLeftCornerOverlay.clone) {
-        this.bottomLeftCornerOverlay.refresh(fastDraw);
+        this.bottomLeftCornerOverlay.refresh(fastDraw, verticalScrolling, horizontalScrolling);
       }
 
       if (this.debug) {
-        this.debug.refresh(fastDraw);
+        this.debug.refresh(fastDraw, verticalScrolling, horizontalScrolling);
       }
     }
 
@@ -20726,7 +20732,7 @@ var Table = function () {
 
   }, {
     key: 'draw',
-    value: function draw(fastDraw) {
+    value: function draw(fastDraw, verticalScrolling, horizontalScrolling) {
       var _wot = this.wot,
           wtOverlays = _wot.wtOverlays,
           wtViewport = _wot.wtViewport;
@@ -20738,7 +20744,7 @@ var Table = function () {
 
       if (!this.isWorkingOnClone()) {
         this.holderOffset = (0, _element.offset)(this.holder);
-        fastDraw = wtViewport.createRenderCalculators(fastDraw);
+        fastDraw = wtViewport.createRenderCalculators(fastDraw, verticalScrolling, horizontalScrolling);
 
         if (rowHeaders && !this.wot.getSetting('fixedColumnsLeft')) {
           var leftScrollPos = wtOverlays.leftOverlay.getScrollPosition();
@@ -20762,7 +20768,7 @@ var Table = function () {
           wtViewport.createVisibleCalculators();
         }
         if (wtOverlays) {
-          wtOverlays.refresh(true);
+          wtOverlays.refresh(true, verticalScrolling, horizontalScrolling);
         }
       } else {
         if (this.isWorkingOnClone()) {
@@ -20790,7 +20796,7 @@ var Table = function () {
         this.columnFilter = new _column2.default(startColumn, this.wot.getSetting('totalColumns'), rowHeaders);
 
         this.alignOverlaysWithTrimmingContainer();
-        this._doDraw(); // creates calculator after draw
+        this._doDraw(verticalScrolling, horizontalScrolling); // creates calculator after draw
       }
       this.refreshSelections(fastDraw);
 
@@ -20820,10 +20826,10 @@ var Table = function () {
     }
   }, {
     key: '_doDraw',
-    value: function _doDraw() {
+    value: function _doDraw(verticalScrolling, horizontalScrolling) {
       var wtRenderer = new _tableRenderer2.default(this);
 
-      wtRenderer.render();
+      wtRenderer.render(verticalScrolling, horizontalScrolling);
     }
   }, {
     key: 'removeClassFromCells',
@@ -21344,7 +21350,7 @@ var TableRenderer = function () {
 
   _createClass(TableRenderer, [{
     key: 'render',
-    value: function render() {
+    value: function render(verticalScrolling, horizontalScrolling) {
       if (!this.wtTable.isWorkingOnClone()) {
         var skipRender = {};
         this.wot.getSetting('beforeDraw', true, skipRender);
@@ -21368,6 +21374,10 @@ var TableRenderer = function () {
       var workspaceWidth = void 0;
       var adjusted = false;
 
+      // we can't count on horizontalScrolling to be set,
+      // so in those cases just set to true
+      var shouldAdjustWidth = typeof horizontalScrolling === 'undefined' || horizontalScrolling;
+
       if (_base2.default.isOverlayTypeOf(this.wot.cloneOverlay, _base2.default.CLONE_BOTTOM) || _base2.default.isOverlayTypeOf(this.wot.cloneOverlay, _base2.default.CLONE_BOTTOM_LEFT_CORNER)) {
 
         // do NOT render headers on the bottom or bottom-left corner overlay
@@ -21386,12 +21396,14 @@ var TableRenderer = function () {
         // Render table rows
         this.renderRows(totalRows, rowsToRender, columnsToRender);
 
-        if (!this.wtTable.isWorkingOnClone()) {
+        if (shouldAdjustWidth && !this.wtTable.isWorkingOnClone()) {
           workspaceWidth = this.wot.wtViewport.getWorkspaceWidth();
           this.wot.wtViewport.containerWidth = null;
         }
 
-        this.adjustColumnWidths(columnsToRender);
+        if (shouldAdjustWidth) {
+          this.adjustColumnWidths(columnsToRender);
+        }
         this.markOversizedColumnHeaders();
         this.adjustColumnHeaderHeights();
       }
@@ -21406,19 +21418,19 @@ var TableRenderer = function () {
       }
       if (!this.wtTable.isWorkingOnClone()) {
         this.wot.wtViewport.createVisibleCalculators();
-        this.wot.wtOverlays.refresh(false);
+        this.wot.wtOverlays.refresh(false, verticalScrolling, horizontalScrolling);
 
         this.wot.wtOverlays.applyToDOM();
 
-        var hiderWidth = (0, _element.outerWidth)(this.wtTable.hider);
-        var tableWidth = (0, _element.outerWidth)(this.wtTable.TABLE);
+        var hiderWidth = shouldAdjustWidth && (0, _element.outerWidth)(this.wtTable.hider);
+        var tableWidth = shouldAdjustWidth && (0, _element.outerWidth)(this.wtTable.TABLE);
 
         if (hiderWidth !== 0 && tableWidth !== hiderWidth) {
           // Recalculate the column widths, if width changes made in the overlays removed the scrollbar, thus changing the viewport width.
           this.adjustColumnWidths(columnsToRender);
         }
 
-        if (workspaceWidth !== this.wot.wtViewport.getWorkspaceWidth()) {
+        if (shouldAdjustWidth && workspaceWidth !== this.wot.wtViewport.getWorkspaceWidth()) {
           // workspace width changed though to shown/hidden vertical scrollbar. Let's reapply stretching
           this.wot.wtViewport.containerWidth = null;
 
@@ -22478,10 +22490,12 @@ var Viewport = function () {
     key: 'createRenderCalculators',
     value: function createRenderCalculators() {
       var fastDraw = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var verticalScrolling = arguments[1];
+      var horizontalScrolling = arguments[2];
 
       if (fastDraw) {
-        var proposedRowsVisibleCalculator = this.createRowsCalculator(true);
-        var proposedColumnsVisibleCalculator = this.createColumnsCalculator(true);
+        var proposedRowsVisibleCalculator = this.createRowsCalculator(true, verticalScrolling, horizontalScrolling);
+        var proposedColumnsVisibleCalculator = this.createColumnsCalculator(true, verticalScrolling, horizontalScrolling);
 
         if (!(this.areAllProposedVisibleRowsAlreadyRendered(proposedRowsVisibleCalculator) && this.areAllProposedVisibleColumnsAlreadyRendered(proposedColumnsVisibleCalculator))) {
           fastDraw = false;
@@ -22489,8 +22503,8 @@ var Viewport = function () {
       }
 
       if (!fastDraw) {
-        this.rowsRenderCalculator = this.createRowsCalculator();
-        this.columnsRenderCalculator = this.createColumnsCalculator();
+        this.rowsRenderCalculator = this.createRowsCalculator(null, verticalScrolling, horizontalScrolling);
+        this.columnsRenderCalculator = this.createColumnsCalculator(null, verticalScrolling, horizontalScrolling);
       }
       // delete temporarily to make sure that renderers always use rowsRenderCalculator, not rowsVisibleCalculator
       this.rowsVisibleCalculator = null;
@@ -28780,7 +28794,7 @@ Handsontable.DefaultSettings = _defaultSettings2.default;
 Handsontable.EventManager = _eventManager2.default;
 Handsontable._getListenersCounter = _eventManager.getListenersCounter; // For MemoryLeak tests
 
-Handsontable.buildDate = '09/05/2018 15:18:34';
+Handsontable.buildDate = '20/03/2019 14:57:41';
 Handsontable.packageName = 'handsontable';
 Handsontable.version = '3.0.0';
 
